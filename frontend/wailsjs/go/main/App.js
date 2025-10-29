@@ -10,6 +10,14 @@ export function CutFile(arg1) {
   return window['go']['main']['App']['CutFile'](arg1);
 }
 
+export function ExecuteAICommands(arg1) {
+  return window['go']['main']['App']['ExecuteAICommands'](arg1);
+}
+
+export function GetAICommands(arg1, arg2) {
+  return window['go']['main']['App']['GetAICommands'](arg1, arg2);
+}
+
 export function GetAppIcon(arg1) {
   return window['go']['main']['App']['GetAppIcon'](arg1);
 }

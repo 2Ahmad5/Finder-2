@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HiFolder, HiDocument, HiArrowDownTray, HiMusicalNote, HiCube, HiMagnifyingGlass } from 'react-icons/hi2';
+import { HiFolder, HiDocument, HiArrowDownTray, HiMusicalNote, HiCube, HiMagnifyingGlass, HiLink } from 'react-icons/hi2';
 import { GetHomeFolders } from '../../wailsjs/go/main/App';
 import { Folder } from '../types/filesystem';
 
@@ -42,11 +42,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onFolderSelect, currentPath, hasSearc
   };
 
   const isSearchActive = currentPath === 'search';
+  const isConnectionsActive = currentPath === 'connections';
 
   return (
     <div className="w-[15%] px-2 h-screen bg-gray-100 flex flex-col">
       <div className="p-2">
-        <h3 className="m-0 text-xl font-cinzel font-semibold text-gray-900 tracking-wider">NORN</h3>
+        <h3 className="m-0 text-xl font-cinzel font-semibold text-gray-900 tracking-wider">Ahmad</h3>
       </div>
       <nav className="py-3">
         {loading && <p className="text-xs text-gray-500 px-2">Loading...</p>}
@@ -82,6 +83,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onFolderSelect, currentPath, hasSearc
         >
           <HiMagnifyingGlass className="text-xl mr-3" />
           <span className="text-sm">Search</span>
+        </div>
+
+        {/* Connections option */}
+        <div
+          className={`flex items-center px-2 py-2 rounded-lg cursor-pointer transition-colors ${
+            isConnectionsActive ? 'bg-gray-300' : 'hover:bg-gray-200'
+          }`}
+          onClick={() => onFolderSelect('connections')}
+        >
+          <HiLink className="text-xl mr-3 text-gray-600" />
+          <span className="text-sm">Connections</span>
         </div>
       </nav>
     </div>

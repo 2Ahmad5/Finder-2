@@ -7,9 +7,10 @@ interface NavbarProps {
   searchQuery?: string;
   onSearch?: (query: string) => void;
   isAISearchOpen?: boolean;
+  onAIClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = '', onSearch, isAISearchOpen = false }) => {
+const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = '', onSearch, isAISearchOpen = false, onAIClick }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [copied, setCopied] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -65,7 +66,10 @@ const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = ''
         </button>
 
         {/* AI icon */}
-        <button className="p-2 hover:bg-gray-300 rounded-lg transition-colors">
+        <button
+          onClick={onAIClick}
+          className="p-2 hover:bg-gray-300 rounded-lg transition-colors"
+        >
           <HiSparkles className={`w-5 h-5 transition-colors ${isAISearchOpen ? 'text-yellow-500' : 'text-gray-600'}`} />
         </button>
 

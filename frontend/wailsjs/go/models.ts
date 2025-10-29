@@ -1,3 +1,24 @@
+export namespace AI {
+	
+	export class Command {
+	    action: string;
+	    path: string;
+	    name: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Command(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.action = source["action"];
+	        this.path = source["path"];
+	        this.name = source["name"];
+	    }
+	}
+
+}
+
 export namespace backend {
 	
 	export class FileItem {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"Finder-2/backend"
+	"Finder-2/backend/AI"
 	"Finder-2/backend/filter"
 	"Finder-2/backend/open"
 	"Finder-2/backend/search"
@@ -104,4 +105,13 @@ func (a *App) TrashFile(path string) error {
 
 func (a *App) RenameFile(oldPath string, newName string) error {
 	return contextmenu.RenameFile(oldPath, newName)
+}
+
+// AI Methods
+func (a *App) GetAICommands(prompt string, currentPath string) ([]AI.Command, error) {
+	return AI.GetAICommands(prompt, currentPath)
+}
+
+func (a *App) ExecuteAICommands(commands []AI.Command) []error {
+	return AI.ExecuteCommands(commands)
 }

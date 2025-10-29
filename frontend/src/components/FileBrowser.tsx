@@ -4,6 +4,7 @@ import { FileItem as FileItemType } from '../types/filesystem';
 import FileItem from './FileItem';
 import Navbar from '../navbar/Navbar';
 import ContextMenu from './ContextMenu';
+import FolderView from './FolderView';
 import { HiChevronUp, HiChevronDown } from 'react-icons/hi2';
 
 interface FileBrowserProps {
@@ -12,12 +13,14 @@ interface FileBrowserProps {
   searchQuery?: string;
   onSearch?: (query: string) => void;
   isAISearchOpen?: boolean;
+  onAIClick?: () => void;
+  refreshTrigger?: number;
 }
 
 type SortColumn = 'name' | 'date' | 'size';
 type SortDirection = 'asc' | 'desc';
 
-const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, searchQuery, onSearch, isAISearchOpen = false }) => {
+const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, searchQuery, onSearch, isAISearchOpen = false, onAIClick, refreshTrigger = 0 }) => {
   const [files, setFiles] = useState<FileItemType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +28,8 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(null);
+  const [folderView, setFolderView] = useState<{ x: number; y: number; path: string } | null>(null);
+  const [isFolderViewHovered, setIsFolderViewHovered] = useState(false);
 
   useEffect(() => {
     if (!currentPath) return;
@@ -34,10 +39,8 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
 
     // Handle search mode
     if (currentPath === 'search' && searchQuery) {
-      // Get user's home directory from backend
       GetHomeDirectory()
         .then((homeDir) => {
-          // Search filenames using fd (fast and reliable)
           SearchFilenames(homeDir, searchQuery)
             .then((filenameResults) => {
               const fileItems = (filenameResults || []).map((result: any) => result.fileItem);
@@ -65,7 +68,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
           setLoading(false);
         });
     }
-  }, [currentPath, searchQuery]);
+  }, [currentPath, searchQuery, refreshTrigger]);
 
   const handleFileClick = (path: string) => {
     setSelectedFile(path);
@@ -95,16 +98,37 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
 
   const handleContextMenu = (path: string, x: number, y: number) => {
     setContextMenu({ x, y, path });
+    setFolderView(null);
+    setIsFolderViewHovered(false);
   };
 
   const closeContextMenu = () => {
     setContextMenu(null);
   };
 
+  const handleFolderHover = (path: string, x: number, y: number) => {
+    setFolderView({ x, y, path });
+  };
+
+  const closeFolderView = () => {
+    setTimeout(() => {
+      if (!isFolderViewHovered) {
+        setFolderView(null);
+      }
+    }, 100);
+  };
+
+  const handleFolderViewMouseEnter = () => {
+    setIsFolderViewHovered(true);
+  };
+
+  const handleFolderViewMouseLeave = () => {
+    setIsFolderViewHovered(false);
+    setFolderView(null);
+  };
+
   const refreshFiles = () => {
-    // Trigger a re-fetch by updating the effect dependency
     if (currentPath === 'search' && searchQuery) {
-      // Re-run search
       GetHomeDirectory()
         .then((homeDir) => {
           SearchFilenames(homeDir, searchQuery)
@@ -116,7 +140,6 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
         })
         .catch(console.error);
     } else if (currentPath !== 'search') {
-      // Re-fetch folder contents
       GetFolderContents(currentPath)
         .then(setFiles)
         .catch(console.error);
@@ -161,7 +184,14 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
 
   return (
     <div className="flex-1 h-full overflow-auto bg-white flex flex-col">
-      <Navbar pageName={getFolderName(currentPath)} currentPath={currentPath === 'search' ? undefined : currentPath} searchQuery={searchQuery} onSearch={onSearch} isAISearchOpen={isAISearchOpen} />
+      <Navbar
+        pageName={getFolderName(currentPath)}
+        currentPath={currentPath === 'search' ? undefined : currentPath}
+        searchQuery={searchQuery}
+        onSearch={onSearch}
+        isAISearchOpen={isAISearchOpen}
+        onAIClick={onAIClick}
+      />
       <div className="flex-1 overflow-auto px-6 py-2">
         {loading && <p className="text-gray-500">Loading...</p>}
         {error && <p className="text-red-500">Error: {error}</p>}
@@ -200,6 +230,8 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
                   onClick={handleFileClick}
                   onDoubleClick={handleFileDoubleClick}
                   onContextMenu={handleContextMenu}
+                  onFolderHover={handleFolderHover}
+                  onFolderHoverEnd={closeFolderView}
                   isSelected={selectedFile === file.path}
                   viewMode={viewMode}
                 />
@@ -216,6 +248,15 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
           currentDirectory={currentPath}
           onClose={closeContextMenu}
           onRefresh={refreshFiles}
+        />
+      )}
+      {folderView && (
+        <FolderView
+          x={folderView.x}
+          y={folderView.y}
+          folderPath={folderView.path}
+          onMouseEnter={handleFolderViewMouseEnter}
+          onMouseLeave={handleFolderViewMouseLeave}
         />
       )}
     </div>

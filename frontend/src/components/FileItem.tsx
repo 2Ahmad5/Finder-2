@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { HiFolder, HiDocument, HiCube } from 'react-icons/hi2';
 import { FileItem as FileItemType } from '../types/filesystem';
 
@@ -7,11 +7,55 @@ interface FileItemProps {
   onClick: (path: string) => void;
   onDoubleClick: (path: string, isDirectory: boolean, isApp: boolean) => void;
   onContextMenu: (path: string, x: number, y: number) => void;
+  onFolderHover?: (path: string, x: number, y: number) => void;
+  onFolderHoverEnd?: () => void;
   isSelected: boolean;
   viewMode?: 'list' | 'grid';
 }
 
-const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onContextMenu, isSelected, viewMode = 'list' }) => {
+const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onContextMenu, onFolderHover, onFolderHoverEnd, isSelected, viewMode = 'list' }) => {
+  const hoverTimeoutRef = useRef<number | null>(null);
+  const elementRef = useRef<HTMLDivElement>(null);
+  const isHoveringRef = useRef(false);
+  const mousePositionRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    // Only show preview for actual folders, not .app files
+    if (!file.isDirectory || file.isApp || !onFolderHover) return;
+
+    isHoveringRef.current = true;
+    mousePositionRef.current = { x: e.clientX, y: e.clientY };
+
+    // Set a delay before showing the folder view
+    hoverTimeoutRef.current = window.setTimeout(() => {
+      if (isHoveringRef.current && mousePositionRef.current) {
+        onFolderHover(file.path, mousePositionRef.current.x, mousePositionRef.current.y);
+      }
+    }, 500);
+  };
+
+  const handleMouseLeave = () => {
+    isHoveringRef.current = false;
+
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+
+    if (onFolderHoverEnd) {
+      onFolderHoverEnd();
+    }
+  };
+
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     onContextMenu(file.path, e.clientX, e.clientY);
@@ -34,12 +78,15 @@ const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onCon
   if (viewMode === 'grid') {
     return (
       <div
+        ref={elementRef}
         className={`flex flex-col items-center p-4 cursor-pointer rounded-lg transition-colors ${
           isSelected ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-100'
         }`}
         onClick={() => onClick(file.path)}
         onDoubleClick={() => onDoubleClick(file.path, file.isDirectory, file.isApp)}
         onContextMenu={handleContextMenu}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
           {file.iconPath ? (
@@ -69,12 +116,15 @@ const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onCon
 
   return (
     <div
+      ref={elementRef}
       className={`flex items-center px-3 py-1 cursor-pointer rounded transition-colors ${
         isSelected ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-100'
       }`}
       onClick={() => onClick(file.path)}
       onDoubleClick={() => onDoubleClick(file.path, file.isDirectory, file.isApp)}
       onContextMenu={handleContextMenu}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className="flex-1 flex items-center min-w-0">
         {file.isApp ? (
