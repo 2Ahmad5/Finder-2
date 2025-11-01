@@ -2,6 +2,7 @@ package backend
 
 import (
 	"Finder-2/backend/icon"
+	"encoding/base64"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,7 +92,7 @@ func GetHomeFolders() ([]Folder, error) {
 	// Add Media (virtual folder that will show Pictures, Music, Movies)
 	folders = append(folders, Folder{
 		Name: "Media",
-		Path: "media://", // Special path to indicate this is a virtual folder
+		Path: "media://",
 		Icon: "folder",
 	})
 
@@ -179,4 +180,17 @@ func getMediaFolderContents() ([]FileItem, error) {
 	}
 
 	return fileItems, nil
+}
+
+// ReadFileContent reads a file and returns its content as base64 for binary files
+// or as plain text for text files
+func ReadFileContent(filePath string) (string, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	// For now, return everything as base64 to handle all file types
+	encoded := base64.StdEncoding.EncodeToString(data)
+	return encoded, nil
 }

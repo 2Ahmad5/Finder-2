@@ -10,6 +10,10 @@ export function CutFile(arg1) {
   return window['go']['main']['App']['CutFile'](arg1);
 }
 
+export function DisconnectGoogle() {
+  return window['go']['main']['App']['DisconnectGoogle']();
+}
+
 export function ExecuteAICommands(arg1) {
   return window['go']['main']['App']['ExecuteAICommands'](arg1);
 }
@@ -26,6 +30,10 @@ export function GetFolderContents(arg1) {
   return window['go']['main']['App']['GetFolderContents'](arg1);
 }
 
+export function GetGoogleEmail() {
+  return window['go']['main']['App']['GetGoogleEmail']();
+}
+
 export function GetHomeDirectory() {
   return window['go']['main']['App']['GetHomeDirectory']();
 }
@@ -34,12 +42,28 @@ export function GetHomeFolders() {
   return window['go']['main']['App']['GetHomeFolders']();
 }
 
+export function GoUpDirectory(arg1) {
+  return window['go']['main']['App']['GoUpDirectory'](arg1);
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function HandleGoogleCallback(arg1) {
+  return window['go']['main']['App']['HandleGoogleCallback'](arg1);
+}
+
 export function HasClipboardContent() {
   return window['go']['main']['App']['HasClipboardContent']();
+}
+
+export function IsGoogleConnected() {
+  return window['go']['main']['App']['IsGoogleConnected']();
+}
+
+export function ListGoogleDocs() {
+  return window['go']['main']['App']['ListGoogleDocs']();
 }
 
 export function OpenApplication(arg1) {
@@ -52,6 +76,10 @@ export function OpenFile(arg1) {
 
 export function PasteFile(arg1) {
   return window['go']['main']['App']['PasteFile'](arg1);
+}
+
+export function ReadFileContent(arg1) {
+  return window['go']['main']['App']['ReadFileContent'](arg1);
 }
 
 export function RenameFile(arg1, arg2) {
@@ -76,6 +104,10 @@ export function SortByName(arg1, arg2) {
 
 export function SortBySize(arg1, arg2) {
   return window['go']['main']['App']['SortBySize'](arg1, arg2);
+}
+
+export function StartGoogleLogin() {
+  return window['go']['main']['App']['StartGoogleLogin']();
 }
 
 export function TrashFile(arg1) {

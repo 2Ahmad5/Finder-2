@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HiFunnel, HiSparkles, HiPlus } from 'react-icons/hi2';
+import { HiFunnel, HiSparkles, HiChevronLeft, HiSquares2X2, HiListBullet, HiPhoto } from 'react-icons/hi2';
 
 interface NavbarProps {
   pageName: string;
@@ -8,9 +8,13 @@ interface NavbarProps {
   onSearch?: (query: string) => void;
   isAISearchOpen?: boolean;
   onAIClick?: () => void;
+  onGoUp?: () => void;
+  canGoUp?: boolean;
+  viewMode?: 'list' | 'grid' | 'render';
+  onViewModeChange?: (mode: 'list' | 'grid' | 'render') => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = '', onSearch, isAISearchOpen = false, onAIClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = '', onSearch, isAISearchOpen = false, onAIClick, onGoUp, canGoUp = true, viewMode = 'list', onViewModeChange }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [copied, setCopied] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -43,8 +47,22 @@ const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = ''
 
   return (
     <div className="w-full  flex items-center justify-between px-6 py-2">
-      {/* Left side - Page name */}
-      <h1 className="text-base font-semibold text-gray-900">{pageName}</h1>
+      {/* Left side - Back button and Page name */}
+      <div className="flex items-center gap-2">
+        {onGoUp && (
+          <button
+            onClick={canGoUp ? onGoUp : undefined}
+            disabled={!canGoUp}
+            className={`p-1.5 rounded-lg transition-colors ${
+              canGoUp ? 'hover:bg-gray-200 cursor-pointer' : 'cursor-not-allowed opacity-40'
+            }`}
+            title={canGoUp ? "Go up one directory (⌘B)" : "Cannot go up"}
+          >
+            <HiChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
+        <h1 className="text-base font-semibold text-gray-900">{pageName}</h1>
+      </div>
 
       {/* Right side - Icons and search */}
       <div className="flex items-center gap-2">
@@ -73,10 +91,38 @@ const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = ''
           <HiSparkles className={`w-5 h-5 transition-colors ${isAISearchOpen ? 'text-yellow-500' : 'text-gray-600'}`} />
         </button>
 
-        {/* Plus icon */}
-        <button className="p-2 hover:bg-gray-300 rounded-lg transition-colors">
-          <HiPlus className="w-5 h-3 text-gray-600" />
-        </button>
+        {/* View mode icons */}
+        {onViewModeChange && (
+          <div className="flex items-center gap-1 border-l border-gray-300 pl-2 ml-2">
+            <button
+              onClick={() => onViewModeChange('grid')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'grid' ? 'bg-gray-300' : 'hover:bg-gray-200'
+              }`}
+              title="Grid view"
+            >
+              <HiSquares2X2 className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('list')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'list' ? 'bg-gray-300' : 'hover:bg-gray-200'
+              }`}
+              title="List view"
+            >
+              <HiListBullet className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={() => onViewModeChange('render')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'render' ? 'bg-gray-300' : 'hover:bg-gray-200'
+              }`}
+              title="Render view"
+            >
+              <HiPhoto className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+        )}
 
         {/* Search bar */}
         <div className="relative w-[250px]">

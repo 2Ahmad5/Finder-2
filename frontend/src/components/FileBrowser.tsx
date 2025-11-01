@@ -5,6 +5,7 @@ import FileItem from './FileItem';
 import Navbar from '../navbar/Navbar';
 import ContextMenu from './ContextMenu';
 import FolderView from './FolderView';
+import FileRenderer from './FileRenderer';
 import { HiChevronUp, HiChevronDown } from 'react-icons/hi2';
 
 interface FileBrowserProps {
@@ -14,13 +15,14 @@ interface FileBrowserProps {
   onSearch?: (query: string) => void;
   isAISearchOpen?: boolean;
   onAIClick?: () => void;
+  onGoUp?: () => void;
   refreshTrigger?: number;
 }
 
 type SortColumn = 'name' | 'date' | 'size';
 type SortDirection = 'asc' | 'desc';
 
-const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, searchQuery, onSearch, isAISearchOpen = false, onAIClick, refreshTrigger = 0 }) => {
+const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, searchQuery, onSearch, isAISearchOpen = false, onAIClick, onGoUp, refreshTrigger = 0 }) => {
   const [files, setFiles] = useState<FileItemType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +32,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(null);
   const [folderView, setFolderView] = useState<{ x: number; y: number; path: string } | null>(null);
   const [isFolderViewHovered, setIsFolderViewHovered] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'render'>('list');
 
   useEffect(() => {
     if (!currentPath) return;
@@ -108,6 +111,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
 
   const handleFolderHover = (path: string, x: number, y: number) => {
     setFolderView({ x, y, path });
+    setIsFolderViewHovered(true); // Assume user will move to FolderView
   };
 
   const closeFolderView = () => {
@@ -115,7 +119,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
       if (!isFolderViewHovered) {
         setFolderView(null);
       }
-    }, 100);
+    }, 300);
   };
 
   const handleFolderViewMouseEnter = () => {
@@ -180,7 +184,21 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
   };
 
   const isApplicationsFolder = currentPath.endsWith('/Applications');
-  const viewMode = isApplicationsFolder ? 'grid' : 'list';
+
+  // Auto-set grid view for Applications folder, otherwise use user's choice
+  useEffect(() => {
+    if (isApplicationsFolder) {
+      setViewMode('grid');
+    }
+  }, [isApplicationsFolder]);
+
+  // Determine if we can go up (not at a top-level folder or special page)
+  const isSpecialPage = currentPath === 'search' || currentPath === 'connections';
+  const isTopLevelFolder = currentPath.endsWith('/Documents') ||
+                           currentPath.endsWith('/Downloads') ||
+                           currentPath.endsWith('/Applications') ||
+                           currentPath.endsWith('/Media');
+  const canGoUp = !isSpecialPage && !isTopLevelFolder && currentPath !== '';
 
   return (
     <div className="flex-1 h-full overflow-auto bg-white flex flex-col">
@@ -191,55 +209,96 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
         onSearch={onSearch}
         isAISearchOpen={isAISearchOpen}
         onAIClick={onAIClick}
+        onGoUp={onGoUp}
+        canGoUp={canGoUp}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <div className="flex-1 overflow-auto px-6 py-2">
-        {loading && <p className="text-gray-500">Loading...</p>}
-        {error && <p className="text-red-500">Error: {error}</p>}
-        {!loading && !error && files.length === 0 && (
-          <p className="text-gray-500">This folder is empty</p>
-        )}
-        {!loading && !error && files.length > 0 && (
-          <>
-            {viewMode === 'list' && (
-              <div className="flex items-center px-3 py-2 border-b border-gray-200 text-xs font-semibold text-gray-600 mb-1">
-                <div className="flex-1 flex items-center cursor-pointer hover:text-gray-900" onClick={() => handleSort('name')}>
-                  <span>Name</span>
-                  {sortColumn === 'name' && (
-                    sortDirection === 'asc' ? <HiChevronUp className="ml-1 w-3 h-3" /> : <HiChevronDown className="ml-1 w-3 h-3" />
-                  )}
-                </div>
-                <div className="w-32 flex items-center cursor-pointer hover:text-gray-900" onClick={() => handleSort('date')}>
-                  <span>Date Modified</span>
-                  {sortColumn === 'date' && (
-                    sortDirection === 'asc' ? <HiChevronUp className="ml-1 w-3 h-3" /> : <HiChevronDown className="ml-1 w-3 h-3" />
-                  )}
-                </div>
-                <div className="w-24 flex items-center cursor-pointer hover:text-gray-900" onClick={() => handleSort('size')}>
-                  <span>Size</span>
-                  {sortColumn === 'size' && (
-                    sortDirection === 'asc' ? <HiChevronUp className="ml-1 w-3 h-3" /> : <HiChevronDown className="ml-1 w-3 h-3" />
-                  )}
-                </div>
+      {viewMode === 'render' ? (
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left side - File list without date/size */}
+          <div className="w-80 flex-shrink-0 overflow-auto px-6 py-2 border-r border-gray-200">
+            {loading && <p className="text-gray-500">Loading...</p>}
+            {error && <p className="text-red-500">Error: {error}</p>}
+            {!loading && !error && files.length === 0 && (
+              <p className="text-gray-500">This folder is empty</p>
+            )}
+            {!loading && !error && files.length > 0 && (
+              <div className="space-y-1">
+                {files.map((file) => (
+                  <div
+                    key={file.path}
+                    className={`flex items-center px-3 py-2 cursor-pointer rounded transition-colors ${
+                      selectedFile === file.path ? 'bg-blue-100' : 'hover:bg-gray-100'
+                    }`}
+                    onClick={() => handleFileClick(file.path)}
+                    onDoubleClick={() => handleFileDoubleClick(file.path, file.isDirectory, file.isApp)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      handleContextMenu(file.path, e.clientX, e.clientY);
+                    }}
+                  >
+                    <span className="text-sm truncate">{file.name}</span>
+                  </div>
+                ))}
               </div>
             )}
-            <div className={viewMode === 'grid' ? 'grid grid-cols-6 gap-4' : 'space-y-1'}>
-              {files.map((file) => (
-                <FileItem
-                  key={file.path}
-                  file={file}
-                  onClick={handleFileClick}
-                  onDoubleClick={handleFileDoubleClick}
-                  onContextMenu={handleContextMenu}
-                  onFolderHover={handleFolderHover}
-                  onFolderHoverEnd={closeFolderView}
-                  isSelected={selectedFile === file.path}
-                  viewMode={viewMode}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+          </div>
+          {/* Right side - File renderer */}
+          <div className="flex-1 overflow-hidden">
+            <FileRenderer file={files.find(f => f.path === selectedFile) || null} />
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto px-6 py-2">
+          {loading && <p className="text-gray-500">Loading...</p>}
+          {error && <p className="text-red-500">Error: {error}</p>}
+          {!loading && !error && files.length === 0 && (
+            <p className="text-gray-500">This folder is empty</p>
+          )}
+          {!loading && !error && files.length > 0 && (
+            <>
+              {viewMode === 'list' && (
+                <div className="flex items-center px-3 py-2 border-b border-gray-200 text-xs font-semibold text-gray-600 mb-1">
+                  <div className="flex-1 flex items-center cursor-pointer hover:text-gray-900" onClick={() => handleSort('name')}>
+                    <span>Name</span>
+                    {sortColumn === 'name' && (
+                      sortDirection === 'asc' ? <HiChevronUp className="ml-1 w-3 h-3" /> : <HiChevronDown className="ml-1 w-3 h-3" />
+                    )}
+                  </div>
+                  <div className="w-32 flex items-center cursor-pointer hover:text-gray-900" onClick={() => handleSort('date')}>
+                    <span>Date Modified</span>
+                    {sortColumn === 'date' && (
+                      sortDirection === 'asc' ? <HiChevronUp className="ml-1 w-3 h-3" /> : <HiChevronDown className="ml-1 w-3 h-3" />
+                    )}
+                  </div>
+                  <div className="w-24 flex items-center cursor-pointer hover:text-gray-900" onClick={() => handleSort('size')}>
+                    <span>Size</span>
+                    {sortColumn === 'size' && (
+                      sortDirection === 'asc' ? <HiChevronUp className="ml-1 w-3 h-3" /> : <HiChevronDown className="ml-1 w-3 h-3" />
+                    )}
+                  </div>
+                </div>
+              )}
+              <div className={viewMode === 'grid' ? 'grid grid-cols-6 gap-4' : 'space-y-1'}>
+                {files.map((file) => (
+                  <FileItem
+                    key={file.path}
+                    file={file}
+                    onClick={handleFileClick}
+                    onDoubleClick={handleFileDoubleClick}
+                    onContextMenu={handleContextMenu}
+                    onFolderHover={handleFolderHover}
+                    onFolderHoverEnd={closeFolderView}
+                    isSelected={selectedFile === file.path}
+                    viewMode={viewMode}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
       {contextMenu && (
         <ContextMenu
           x={contextMenu.x}

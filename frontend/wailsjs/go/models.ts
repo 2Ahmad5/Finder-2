@@ -64,6 +64,29 @@ export namespace backend {
 
 }
 
+export namespace connections {
+	
+	export class GoogleFile {
+	    id: string;
+	    name: string;
+	    mimeType: string;
+	    webLink: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new GoogleFile(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.mimeType = source["mimeType"];
+	        this.webLink = source["webLink"];
+	    }
+	}
+
+}
+
 export namespace search {
 	
 	export class SearchResult {

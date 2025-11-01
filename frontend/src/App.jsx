@@ -3,7 +3,7 @@ import Sidebar from './navbar/Sidebar';
 import FileBrowser from './components/FileBrowser';
 import AISearch from './components/AISearch';
 import API from './pages/API';
-import { GetHomeDirectory } from '../wailsjs/go/main/App';
+import { GetHomeDirectory, GoUpDirectory } from '../wailsjs/go/main/App';
 
 function App() {
     const [currentPath, setCurrentPath] = useState('');
@@ -26,11 +26,17 @@ function App() {
                 e.preventDefault();
                 setIsAISearchOpen(true);
             }
+
+            // Command+B to go up one directory
+            if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+                e.preventDefault();
+                goUpOneDirectory();
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
+    }, [currentPath]);
 
     const handleFolderSelect = (path) => {
         setCurrentPath(path);
@@ -52,6 +58,21 @@ function App() {
         setRefreshTrigger(prev => prev + 1);
     };
 
+    const goUpOneDirectory = () => {
+        // Don't navigate up if on special pages
+        if (currentPath === 'search' || currentPath === 'connections' || !currentPath) {
+            return;
+        }
+
+        GoUpDirectory(currentPath)
+            .then(parentPath => {
+                if (parentPath) {
+                    setCurrentPath(parentPath);
+                }
+            })
+            .catch(err => console.error('Error navigating up:', err));
+    };
+
     return (
         <div className="flex w-screen h-screen overflow-hidden">
             <Sidebar onFolderSelect={handleFolderSelect} currentPath={currentPath} hasSearchQuery={searchQuery.trim() !== ''} isAISearchOpen={isAISearchOpen} />
@@ -65,6 +86,7 @@ function App() {
                     onSearch={handleSearch}
                     isAISearchOpen={isAISearchOpen}
                     onAIClick={() => setIsAISearchOpen(true)}
+                    onGoUp={goUpOneDirectory}
                     refreshTrigger={refreshTrigger}
                 />
             ) : (
