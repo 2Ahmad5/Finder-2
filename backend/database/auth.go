@@ -3,8 +3,6 @@ package database
 import (
 	"encoding/json"
 	"errors"
-	"log"
-
 	"github.com/zalando/go-keyring"
 )
 
@@ -18,7 +16,7 @@ type GoogleAuthData struct {
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`
 	Email        string `json:"email"`
-	ExpiresAt    int64  `json:"expires_at"` // Unix timestamp
+	ExpiresAt    int64  `json:"expires_at"`
 }
 
 // SaveGoogleAuth stores Google OAuth tokens securely in keychain
@@ -36,7 +34,7 @@ func GetGoogleAuth() (*GoogleAuthData, error) {
 	jsonData, err := keyring.Get(serviceName, googleUser)
 	if err != nil {
 		if errors.Is(err, keyring.ErrNotFound) {
-			return nil, nil // Not an error, just not connected yet
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -60,22 +58,8 @@ func DeleteGoogleAuth() error {
 
 // IsGoogleConnected checks if user has connected their Google account
 func IsGoogleConnected() bool {
-	log.Println("IsGoogleConnected called")
 	authData, err := GetGoogleAuth()
-	if err != nil {
-		log.Println("IsGoogleConnected: error from GetGoogleAuth:", err)
-		return false
-	}
-	if authData == nil {
-		log.Println("IsGoogleConnected: authData is nil")
-		return false
-	}
-	if authData.RefreshToken == "" {
-		log.Println("IsGoogleConnected: refresh token is empty")
-		return false
-	}
-	log.Println("IsGoogleConnected: YES - connected as", authData.Email)
-	return true
+	return err == nil && authData != nil && authData.RefreshToken != ""
 }
 
 // GetGoogleRefreshToken returns just the refresh token (for convenience)

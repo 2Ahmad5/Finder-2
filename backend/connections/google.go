@@ -13,6 +13,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 )
 
@@ -30,6 +31,8 @@ func InitGoogleOAuth(clientID, clientSecret string) {
 		Scopes: []string{
 			drive.DriveFileScope,     // Access to files created by this app
 			drive.DriveMetadataScope, // Read file metadata
+			gmail.GmailReadonlyScope, // Read Gmail messages
+			gmail.GmailSendScope,     // Send emails
 			"https://www.googleapis.com/auth/userinfo.email",
 		},
 		Endpoint: google.Endpoint,
@@ -49,16 +52,12 @@ func StartGoogleLogin() string {
 		return ""
 	}
 
-	// Generate the authorization URL
-	// AccessTypeOffline requests a refresh token
-	// ApprovalForce forces the consent screen even if already authorized (ensures we get a refresh token)
 	url := googleOAuthConfig.AuthCodeURL(oauthStateString,
 		oauth2.AccessTypeOffline,
 		oauth2.ApprovalForce)
 	return url
 }
 
-// LoginAndWait performs the complete login flow and waits for completion
 func LoginAndWait() error {
 	// Start the callback server
 	if err := StartCallbackServer(); err != nil {
@@ -229,4 +228,65 @@ func ListGoogleDocs() ([]GoogleFile, error) {
 	}
 
 	return files, nil
+}
+
+// GmailMessage represents an email from Gmail
+type GmailMessage struct {
+	ID      string `json:"id"`
+	Subject string `json:"subject"`
+	From    string `json:"from"`
+	Snippet string `json:"snippet"`
+	Date    string `json:"date"`
+}
+
+// ListGmailMessages fetches recent Gmail messages
+func ListGmailMessages() ([]GmailMessage, error) {
+	client, err := GetGoogleClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Google client: %v", err)
+	}
+
+	srv, err := gmail.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Gmail service: %v", err)
+	}
+
+	// Get messages from inbox
+	msgList, err := srv.Users.Messages.List("me").MaxResults(50).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list messages: %v", err)
+	}
+
+	var messages []GmailMessage
+	for _, m := range msgList.Messages {
+		// Get full message details
+		msg, err := srv.Users.Messages.Get("me", m.Id).Format("metadata").
+			MetadataHeaders("Subject", "From", "Date").Do()
+		if err != nil {
+			log.Printf("Error getting message %s: %v", m.Id, err)
+			continue
+		}
+
+		var subject, from, date string
+		for _, header := range msg.Payload.Headers {
+			switch header.Name {
+			case "Subject":
+				subject = header.Value
+			case "From":
+				from = header.Value
+			case "Date":
+				date = header.Value
+			}
+		}
+
+		messages = append(messages, GmailMessage{
+			ID:      msg.Id,
+			Subject: subject,
+			From:    from,
+			Snippet: msg.Snippet,
+			Date:    date,
+		})
+	}
+
+	return messages, nil
 }

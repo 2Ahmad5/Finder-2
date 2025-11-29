@@ -6,6 +6,18 @@ export function CopyFile(arg1) {
   return window['go']['main']['App']['CopyFile'](arg1);
 }
 
+export function CreateFile(arg1, arg2) {
+  return window['go']['main']['App']['CreateFile'](arg1, arg2);
+}
+
+export function CreateFolder(arg1, arg2) {
+  return window['go']['main']['App']['CreateFolder'](arg1, arg2);
+}
+
+export function CreateGoogleDoc(arg1, arg2) {
+  return window['go']['main']['App']['CreateGoogleDoc'](arg1, arg2);
+}
+
 export function CutFile(arg1) {
   return window['go']['main']['App']['CutFile'](arg1);
 }
@@ -62,6 +74,10 @@ export function IsGoogleConnected() {
   return window['go']['main']['App']['IsGoogleConnected']();
 }
 
+export function ListGmailMessages() {
+  return window['go']['main']['App']['ListGmailMessages']();
+}
+
 export function ListGoogleDocs() {
   return window['go']['main']['App']['ListGoogleDocs']();
 }
@@ -94,6 +110,10 @@ export function SearchFilenames(arg1, arg2) {
   return window['go']['main']['App']['SearchFilenames'](arg1, arg2);
 }
 
+export function ShareFile(arg1, arg2) {
+  return window['go']['main']['App']['ShareFile'](arg1, arg2);
+}
+
 export function SortByDate(arg1, arg2) {
   return window['go']['main']['App']['SortByDate'](arg1, arg2);
 }
@@ -112,4 +132,12 @@ export function StartGoogleLogin() {
 
 export function TrashFile(arg1) {
   return window['go']['main']['App']['TrashFile'](arg1);
+}
+
+export function UnZip(arg1) {
+  return window['go']['main']['App']['UnZip'](arg1);
+}
+
+export function Zip(arg1) {
+  return window['go']['main']['App']['Zip'](arg1);
 }

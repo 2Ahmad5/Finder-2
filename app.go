@@ -13,6 +13,8 @@ import (
 	"Finder-2/backend/global"
 	"Finder-2/backend/open"
 	"Finder-2/backend/search"
+	"Finder-2/backend/share"
+	"Finder-2/backend/google"
 	contextmenu "Finder-2/backend/context-menu"
 
 	"github.com/joho/godotenv"
@@ -150,6 +152,22 @@ func (a *App) RenameFile(oldPath string, newName string) error {
 	return contextmenu.RenameFile(oldPath, newName)
 }
 
+func (a *App) CreateFile(directory string, name string) error {
+	return contextmenu.CreateFile(directory, name)
+}
+
+func (a *App) CreateFolder(directory string, name string) error {
+	return contextmenu.CreateFolder(directory, name)
+}
+
+func (a *App) Zip(path string) error {
+	return contextmenu.Zip(path)
+}
+
+func (a *App) UnZip(zipPath string) error {
+	return contextmenu.UnZip(zipPath)
+}
+
 // AI Methods
 func (a *App) GetAICommands(prompt string, currentPath string) ([]AI.Command, error) {
 	return AI.GetAICommands(prompt, currentPath)
@@ -194,4 +212,17 @@ func (a *App) DisconnectGoogle() error {
 
 func (a *App) ListGoogleDocs() ([]connections.GoogleFile, error) {
 	return connections.ListGoogleDocs()
+}
+
+func (a *App) ListGmailMessages() ([]connections.GmailMessage, error) {
+	return connections.ListGmailMessages()
+}
+
+func (a *App) ShareFile(filePath string, recipientEmail string) error {
+	return share.ShareFileViaEmail(filePath, recipientEmail)
+}
+
+// Google Docs Methods
+func (a *App) CreateGoogleDoc(directory string, name string) error {
+	return google.CreateGoogleDoc(directory, name)
 }

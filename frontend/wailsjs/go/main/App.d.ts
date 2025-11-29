@@ -7,6 +7,12 @@ import {search} from '../models';
 
 export function CopyFile(arg1:string):Promise<void>;
 
+export function CreateFile(arg1:string,arg2:string):Promise<void>;
+
+export function CreateFolder(arg1:string,arg2:string):Promise<void>;
+
+export function CreateGoogleDoc(arg1:string,arg2:string):Promise<void>;
+
 export function CutFile(arg1:string):Promise<void>;
 
 export function DisconnectGoogle():Promise<void>;
@@ -35,6 +41,8 @@ export function HasClipboardContent():Promise<boolean>;
 
 export function IsGoogleConnected():Promise<boolean>;
 
+export function ListGmailMessages():Promise<Array<connections.GmailMessage>>;
+
 export function ListGoogleDocs():Promise<Array<connections.GoogleFile>>;
 
 export function OpenApplication(arg1:string):Promise<void>;
@@ -51,6 +59,8 @@ export function Search(arg1:string,arg2:string):Promise<Array<search.SearchResul
 
 export function SearchFilenames(arg1:string,arg2:string):Promise<Array<search.SearchResult>>;
 
+export function ShareFile(arg1:string,arg2:string):Promise<void>;
+
 export function SortByDate(arg1:Array<backend.FileItem>,arg2:boolean):Promise<Array<backend.FileItem>>;
 
 export function SortByName(arg1:Array<backend.FileItem>,arg2:boolean):Promise<Array<backend.FileItem>>;
@@ -60,3 +70,7 @@ export function SortBySize(arg1:Array<backend.FileItem>,arg2:boolean):Promise<Ar
 export function StartGoogleLogin():Promise<string>;
 
 export function TrashFile(arg1:string):Promise<void>;
+
+export function UnZip(arg1:string):Promise<void>;
+
+export function Zip(arg1:string):Promise<void>;

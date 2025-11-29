@@ -3,8 +3,7 @@ import { GetFolderContents, OpenFile, OpenApplication, SortByName, SortByDate, S
 import { FileItem as FileItemType } from '../types/filesystem';
 import FileItem from './FileItem';
 import Navbar from '../navbar/Navbar';
-import ContextMenu from './ContextMenu';
-import FolderView from './FolderView';
+import ContextMenu from '../contextMenu/ContextMenu';
 import FileRenderer from './FileRenderer';
 import { HiChevronUp, HiChevronDown } from 'react-icons/hi2';
 
@@ -29,9 +28,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string } | null>(null);
-  const [folderView, setFolderView] = useState<{ x: number; y: number; path: string } | null>(null);
-  const [isFolderViewHovered, setIsFolderViewHovered] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string | null } | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'render'>('list');
 
   useEffect(() => {
@@ -63,7 +60,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
       // Normal folder browsing
       GetFolderContents(currentPath)
         .then((items) => {
-          setFiles(items);
+          setFiles(items || []);
           setLoading(false);
         })
         .catch((err) => {
@@ -99,36 +96,17 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
     }
   };
 
-  const handleContextMenu = (path: string, x: number, y: number) => {
+  const handleContextMenu = (path: string | null, x: number, y: number) => {
     setContextMenu({ x, y, path });
-    setFolderView(null);
-    setIsFolderViewHovered(false);
+  };
+
+  const handleEmptyContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, path: null });
   };
 
   const closeContextMenu = () => {
     setContextMenu(null);
-  };
-
-  const handleFolderHover = (path: string, x: number, y: number) => {
-    setFolderView({ x, y, path });
-    setIsFolderViewHovered(true); // Assume user will move to FolderView
-  };
-
-  const closeFolderView = () => {
-    setTimeout(() => {
-      if (!isFolderViewHovered) {
-        setFolderView(null);
-      }
-    }, 300);
-  };
-
-  const handleFolderViewMouseEnter = () => {
-    setIsFolderViewHovered(true);
-  };
-
-  const handleFolderViewMouseLeave = () => {
-    setIsFolderViewHovered(false);
-    setFolderView(null);
   };
 
   const refreshFiles = () => {
@@ -145,7 +123,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
         .catch(console.error);
     } else if (currentPath !== 'search') {
       GetFolderContents(currentPath)
-        .then(setFiles)
+        .then((items) => setFiles(items || []))
         .catch(console.error);
     }
   };
@@ -250,7 +228,7 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-auto px-6 py-2">
+        <div className="flex-1 overflow-auto px-6 py-2" onContextMenu={handleEmptyContextMenu}>
           {loading && <p className="text-gray-500">Loading...</p>}
           {error && <p className="text-red-500">Error: {error}</p>}
           {!loading && !error && files.length === 0 && (
@@ -288,8 +266,6 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
                     onClick={handleFileClick}
                     onDoubleClick={handleFileDoubleClick}
                     onContextMenu={handleContextMenu}
-                    onFolderHover={handleFolderHover}
-                    onFolderHoverEnd={closeFolderView}
                     isSelected={selectedFile === file.path}
                     viewMode={viewMode}
                   />
@@ -307,15 +283,6 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
           currentDirectory={currentPath}
           onClose={closeContextMenu}
           onRefresh={refreshFiles}
-        />
-      )}
-      {folderView && (
-        <FolderView
-          x={folderView.x}
-          y={folderView.y}
-          folderPath={folderView.path}
-          onMouseEnter={handleFolderViewMouseEnter}
-          onMouseLeave={handleFolderViewMouseLeave}
         />
       )}
     </div>

@@ -66,6 +66,26 @@ export namespace backend {
 
 export namespace connections {
 	
+	export class GmailMessage {
+	    id: string;
+	    subject: string;
+	    from: string;
+	    snippet: string;
+	    date: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new GmailMessage(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.subject = source["subject"];
+	        this.from = source["from"];
+	        this.snippet = source["snippet"];
+	        this.date = source["date"];
+	    }
+	}
 	export class GoogleFile {
 	    id: string;
 	    name: string;

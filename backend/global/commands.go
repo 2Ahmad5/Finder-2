@@ -6,8 +6,7 @@ import (
 	"strings"
 )
 
-// GoUpDirectory returns the parent directory path
-// Returns empty string if already at a top-level folder
+
 func GoUpDirectory(currentPath string, homeDir string) string {
 	// Don't navigate up if path is empty
 	if currentPath == "" {
