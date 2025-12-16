@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { HiFolder, HiDocument, HiCube } from 'react-icons/hi2';
 import { FileItem as FileItemType } from '../types/filesystem';
+import AIRecommendation from './AIRecommendation';
 
 interface FileItemProps {
   file: FileItemType;
@@ -9,9 +10,44 @@ interface FileItemProps {
   onContextMenu: (path: string | null, x: number, y: number) => void;
   isSelected: boolean;
   viewMode?: 'list' | 'grid';
+  onRefresh?: () => void;
 }
 
-const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onContextMenu, isSelected, viewMode = 'list' }) => {
+interface TooltipPosition {
+  x: number;
+  y: number;
+}
+
+const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onContextMenu, isSelected, viewMode = 'list', onRefresh }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({ x: 0, y: 0 });
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    if (file.isDirectory || file.isApp) return;
+
+    hoverTimerRef.current = setTimeout(() => {
+      setTooltipPosition({ x: e.clientX, y: e.clientY });
+      setShowTooltip(true);
+    }, 2000);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    setShowTooltip(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -35,13 +71,24 @@ const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onCon
   if (viewMode === 'grid') {
     return (
       <div
-        className={`flex flex-col items-center p-4 cursor-pointer rounded-lg transition-colors ${
+        className={`relative flex flex-col items-center p-4 cursor-pointer rounded-lg transition-colors ${
           isSelected ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-100'
         }`}
         onClick={() => onClick(file.path)}
         onDoubleClick={() => onDoubleClick(file.path, file.isDirectory, file.isApp)}
         onContextMenu={handleContextMenu}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
+        {showTooltip && (
+          <AIRecommendation
+            x={tooltipPosition.x}
+            y={tooltipPosition.y}
+            filePath={file.path}
+            onClose={() => setShowTooltip(false)}
+            onMoved={() => onRefresh?.()}
+          />
+        )}
         <div className="w-16 h-16 mb-2 flex items-center justify-center">
           {file.iconPath ? (
             <img
@@ -70,13 +117,24 @@ const FileItem: React.FC<FileItemProps> = ({ file, onClick, onDoubleClick, onCon
 
   return (
     <div
-      className={`flex items-center px-3 py-1 cursor-pointer rounded transition-colors ${
+      className={`relative flex items-center px-3 py-1 cursor-pointer rounded transition-colors ${
         isSelected ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-100'
       }`}
       onClick={() => onClick(file.path)}
       onDoubleClick={() => onDoubleClick(file.path, file.isDirectory, file.isApp)}
       onContextMenu={handleContextMenu}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
+      {showTooltip && (
+        <AIRecommendation
+          x={tooltipPosition.x}
+          y={tooltipPosition.y}
+          filePath={file.path}
+          onClose={() => setShowTooltip(false)}
+          onMoved={() => onRefresh?.()}
+        />
+      )}
       <div className="flex-1 flex items-center min-w-0">
         {file.isApp ? (
           <HiCube className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />

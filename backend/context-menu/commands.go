@@ -251,6 +251,28 @@ func UnZip(zipPath string) error {
 	return nil
 }
 
+func MoveFile(sourcePath string, destinationDir string) error {
+	fileName := filepath.Base(sourcePath)
+	destPath := filepath.Join(destinationDir, fileName)
+
+	// Handle duplicate names
+	if _, err := os.Stat(destPath); err == nil {
+		ext := filepath.Ext(fileName)
+		nameWithoutExt := fileName[:len(fileName)-len(ext)]
+		counter := 1
+		for {
+			newName := fmt.Sprintf("%s %d%s", nameWithoutExt, counter, ext)
+			destPath = filepath.Join(destinationDir, newName)
+			if _, err := os.Stat(destPath); os.IsNotExist(err) {
+				break
+			}
+			counter++
+		}
+	}
+
+	return os.Rename(sourcePath, destPath)
+}
+
 func copyFile(src, dst string) error {
 	sourceFile, err := os.Open(src)
 	if err != nil {

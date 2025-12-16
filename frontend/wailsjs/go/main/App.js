@@ -42,6 +42,10 @@ export function GetFolderContents(arg1) {
   return window['go']['main']['App']['GetFolderContents'](arg1);
 }
 
+export function GetFolderTree(arg1, arg2) {
+  return window['go']['main']['App']['GetFolderTree'](arg1, arg2);
+}
+
 export function GetGoogleEmail() {
   return window['go']['main']['App']['GetGoogleEmail']();
 }
@@ -82,6 +86,10 @@ export function ListGoogleDocs() {
   return window['go']['main']['App']['ListGoogleDocs']();
 }
 
+export function MoveFile(arg1, arg2) {
+  return window['go']['main']['App']['MoveFile'](arg1, arg2);
+}
+
 export function OpenApplication(arg1) {
   return window['go']['main']['App']['OpenApplication'](arg1);
 }
@@ -96,6 +104,10 @@ export function PasteFile(arg1) {
 
 export function ReadFileContent(arg1) {
   return window['go']['main']['App']['ReadFileContent'](arg1);
+}
+
+export function RecommendMove(arg1, arg2) {
+  return window['go']['main']['App']['RecommendMove'](arg1, arg2);
 }
 
 export function RenameFile(arg1, arg2) {
@@ -128,6 +140,10 @@ export function SortBySize(arg1, arg2) {
 
 export function StartGoogleLogin() {
   return window['go']['main']['App']['StartGoogleLogin']();
+}
+
+export function SummarizeDirectory(arg1) {
+  return window['go']['main']['App']['SummarizeDirectory'](arg1);
 }
 
 export function TrashFile(arg1) {

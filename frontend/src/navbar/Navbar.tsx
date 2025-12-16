@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { HiFunnel, HiSparkles, HiChevronLeft, HiSquares2X2, HiListBullet, HiPhoto } from 'react-icons/hi2';
+import { HiMap, HiSparkles, HiChevronLeft, HiSquares2X2, HiListBullet, HiPhoto } from 'react-icons/hi2';
 
 interface NavbarProps {
   pageName: string;
@@ -8,13 +8,15 @@ interface NavbarProps {
   onSearch?: (query: string) => void;
   isAISearchOpen?: boolean;
   onAIClick?: () => void;
+  onMapClick?: () => void;
+  hasFolder?: boolean;
   onGoUp?: () => void;
   canGoUp?: boolean;
   viewMode?: 'list' | 'grid' | 'render';
   onViewModeChange?: (mode: 'list' | 'grid' | 'render') => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = '', onSearch, isAISearchOpen = false, onAIClick, onGoUp, canGoUp = true, viewMode = 'list', onViewModeChange }) => {
+const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = '', onSearch, isAISearchOpen = false, onAIClick, onMapClick, hasFolder = false, onGoUp, canGoUp = true, viewMode = 'list', onViewModeChange }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [copied, setCopied] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -78,9 +80,16 @@ const Navbar: React.FC<NavbarProps> = ({ pageName, currentPath, searchQuery = ''
             {copied ? '✓ Copied!' : currentPath}
           </button>
         )}
-        {/* Filter icon */}
-        <button className="p-2 hover:bg-gray-300 rounded-lg transition-colors">
-          <HiFunnel className="w-5 h-3 text-gray-600" />
+        {/* Map icon */}
+        <button
+          onClick={hasFolder ? onMapClick : undefined}
+          disabled={!hasFolder}
+          className={`p-2 rounded-lg transition-colors ${
+            hasFolder ? 'hover:bg-gray-300 cursor-pointer' : 'cursor-not-allowed opacity-40'
+          }`}
+          title={hasFolder ? 'Entity Map' : 'Select a folder to view entity map'}
+        >
+          <HiMap className="w-5 h-5 text-gray-600" />
         </button>
 
         {/* AI icon */}

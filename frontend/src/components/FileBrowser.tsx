@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GetFolderContents, OpenFile, OpenApplication, SortByName, SortByDate, SortBySize, SearchFilenames, GetHomeDirectory } from '../../wailsjs/go/main/App';
 import { FileItem as FileItemType } from '../types/filesystem';
 import FileItem from './FileItem';
 import Navbar from '../navbar/Navbar';
 import ContextMenu from '../contextMenu/ContextMenu';
 import FileRenderer from './FileRenderer';
+import EntityRenderer from '../entityMap/EntityRenderer';
 import { HiChevronUp, HiChevronDown } from 'react-icons/hi2';
 
 interface FileBrowserProps {
@@ -30,34 +31,47 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; path: string | null } | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'render'>('list');
+  const [entityMapFolder, setEntityMapFolder] = useState<string | null>(null);
+
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!currentPath) return;
 
-    setLoading(true);
-    setError(null);
-
-    // Handle search mode
+    // Handle search mode with debouncing
     if (currentPath === 'search' && searchQuery) {
-      GetHomeDirectory()
-        .then((homeDir) => {
-          SearchFilenames(homeDir, searchQuery)
-            .then((filenameResults) => {
-              const fileItems = (filenameResults || []).map((result: any) => result.fileItem);
-              setFiles(fileItems);
-              setLoading(false);
-            })
-            .catch((err) => {
-              setError(err.toString());
-              setLoading(false);
-            });
-        })
-        .catch((err) => {
-          setError(err.toString());
-          setLoading(false);
-        });
+      // Clear any pending search
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+
+      setLoading(true);
+      setError(null);
+
+      // Debounce search by 300ms
+      searchTimeoutRef.current = setTimeout(() => {
+        GetHomeDirectory()
+          .then((homeDir) => {
+            SearchFilenames(homeDir, searchQuery)
+              .then((filenameResults) => {
+                const fileItems = (filenameResults || []).map((result: any) => result.fileItem);
+                setFiles(fileItems);
+                setLoading(false);
+              })
+              .catch((err) => {
+                setError(err.toString());
+                setLoading(false);
+              });
+          })
+          .catch((err) => {
+            setError(err.toString());
+            setLoading(false);
+          });
+      }, 300);
     } else if (currentPath !== 'search') {
-      // Normal folder browsing
+      // Normal folder browsing - no debounce needed
+      setLoading(true);
+      setError(null);
       GetFolderContents(currentPath)
         .then((items) => {
           setFiles(items || []);
@@ -68,6 +82,12 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
           setLoading(false);
         });
     }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
   }, [currentPath, searchQuery, refreshTrigger]);
 
   const handleFileClick = (path: string) => {
@@ -187,6 +207,8 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
         onSearch={onSearch}
         isAISearchOpen={isAISearchOpen}
         onAIClick={onAIClick}
+        onMapClick={() => selectedFile && setEntityMapFolder(selectedFile)}
+        hasFolder={!!selectedFile && files.find(f => f.path === selectedFile)?.isDirectory === true}
         onGoUp={onGoUp}
         canGoUp={canGoUp}
         viewMode={viewMode}
@@ -283,6 +305,12 @@ const FileBrowser: React.FC<FileBrowserProps> = ({ currentPath, onNavigate, sear
           currentDirectory={currentPath}
           onClose={closeContextMenu}
           onRefresh={refreshFiles}
+        />
+      )}
+      {entityMapFolder && (
+        <EntityRenderer
+          folderPath={entityMapFolder}
+          onClose={() => setEntityMapFolder(null)}
         />
       )}
     </div>

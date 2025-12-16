@@ -2,6 +2,7 @@ import React from 'react';
 import { CopyFile, CutFile, PasteFile, TrashFile, Zip, UnZip } from '../../wailsjs/go/main/App';
 import Rename from './features/Rename';
 import Share from './features/Share';
+import Summarize from './features/AI';
 import { CreateFileComponent, CreateFolderComponent } from './features/Create';
 
 // Types
@@ -114,7 +115,6 @@ export const menuItems: MenuItem[] = [
     id: 'zip',
     label: 'Zip',
     showOnEmpty: false,
-    showDividerAfter: true,
     disabled: ({ filePath }) => filePath.endsWith('.zip'),
     action: ({ filePath, onClose, onRefresh }) => {
       Zip(filePath)
@@ -124,6 +124,15 @@ export const menuItems: MenuItem[] = [
         })
         .catch(err => console.error('Zip error:', err));
     },
+  },
+  {
+    id: 'summarize',
+    label: 'Summarize',
+    showOnEmpty: false,
+    showDividerAfter: true,
+    component: Summarize,
+    disabled: ({ filePath }) => !filePath || filePath.endsWith('.zip'),
+    action: () => {},
   },
   {
     id: 'trash',

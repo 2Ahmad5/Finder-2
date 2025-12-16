@@ -15,6 +15,7 @@ import (
 	"Finder-2/backend/search"
 	"Finder-2/backend/share"
 	"Finder-2/backend/google"
+	"Finder-2/backend/entity"
 	contextmenu "Finder-2/backend/context-menu"
 
 	"github.com/joho/godotenv"
@@ -177,6 +178,10 @@ func (a *App) ExecuteAICommands(commands []AI.Command) []error {
 	return AI.ExecuteCommands(commands)
 }
 
+func (a *App) SummarizeDirectory(directoryPath string) (*AI.SummarizeResponse, error) {
+	return AI.SummarizeDirectory(directoryPath)
+}
+
 func (a *App) GoUpDirectory(currentPath string) (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -225,4 +230,18 @@ func (a *App) ShareFile(filePath string, recipientEmail string) error {
 // Google Docs Methods
 func (a *App) CreateGoogleDoc(directory string, name string) error {
 	return google.CreateGoogleDoc(directory, name)
+}
+
+// Entity Map Methods
+func (a *App) GetFolderTree(rootPath string, maxDepth int) (*entity.FolderNode, error) {
+	return entity.GetFolderTree(rootPath, maxDepth)
+}
+
+// AI Recommendation Methods
+func (a *App) RecommendMove(fileName string, fileData string) (*AI.RecommendMoveResponse, error) {
+	return AI.RecommendMove(fileName, fileData)
+}
+
+func (a *App) MoveFile(sourcePath string, destinationDir string) error {
+	return contextmenu.MoveFile(sourcePath, destinationDir)
 }
